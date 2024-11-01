@@ -1,0 +1,21 @@
+{
+  "name": "babel-plugin-private-to-public",
+  "version": "1.0.0",
+  "description": "A Babel plugin that converts #private to _public",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.25.9",
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0"
+  },
+  "dependencies": {
+    "babel-plugin-private-to-public": "file:.yalc/babel-plugin-private-to-public"
+  }
+}
