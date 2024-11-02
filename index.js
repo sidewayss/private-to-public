@@ -48,7 +48,6 @@ export default function({ types: t }) {
                   ?? { code:charOne, map:{} };           // new object
           byClass[classId.name] = charCode;
         }
-      //console.log("class", classId.name, path.node.superClass?.name, byClass);
       },
       ClassProperty(path) {         // public fields
         newField(t, path);
@@ -90,7 +89,6 @@ function newField(t, path, isPrivate) {
   const
   node = path.node,
   key  = node.key;
-//console.log("newField():", isPrivate ? key.id.name : key.name, charCode);
 
   if (node.value !== null) {  // reassign static = value
     if (node.static) {
