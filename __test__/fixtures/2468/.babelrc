@@ -1,0 +1,3 @@
+{
+"plugins": [["../../../lib/index.js", {"minify":true, "aToZ":true, "byFile":true}]]
+}

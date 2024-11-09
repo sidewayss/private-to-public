@@ -2,52 +2,55 @@ let
 prefix,   // user configured string, defaults to "_",
 isMini,   // boolean for minify option, defaults to false
 aToZ,     // minify sub-option to include UTF-8 Latin Supplement chars
+byFile,   // boolean indicates that options should reset for each file
 classId,  // global identifier, set upon entering class declaration
 charCode, // the current byClass object for this class or one of its supers
-charMap,  // Map used to create continuous block of char codes
-charOne;  // the starting character code, varies by aToZ option value
+blocks;   // the full set of characters for minification, by block
 
 const
 byClass = {}, // { [classId]:{ char:Number, map:{ name:Number } } }
-
-utf8Map = [[  214,   216],  // Latin 1 Supplement
-           [  246,   248],
-           [  705,  5121]], // Unified Canadian Aboriginal Syllabics
-baseMap = [[ 5740, 63744],  // CJK Compatibility
-           [64109,  4348],  // Georgian / Hangul Jamo / Ethiopic Syllables
-           [ 4680, 64467],  // Arabic Presentation Forms
-           [64829, 64326],  // Hebrew & Arabic Presentation Forms
-           [64433,  1162],  // Extended & Obscure Cyrillic
-           [ 1327,   256]]; // Latin Extended
-
+block16 = [256, 705], // Latin Extended
+block8  = [
+  [192, 214],         // Latin 1 Supplement
+  [216, 246],
+  [248, 705]          // and Latin Extended
+],
+blockSrc = [
+  [ 5121,  5740],     // Unified Canadian Aboriginal Syllabics
+  [63744, 64109],     // CJK Compatibility
+  [ 4348,  4680],     // Georgian / Hangul Jamo / Ethiopic Syllables
+  [64467, 64829],     // Arabic Presentation Forms
+  [64326, 64433],     // Hebrew & Arabic Presentation Forms
+  [ 1162,  1327]      // Extended & Obscure Cyrillic
+];
+//==============================================================================
 export default function({ types: t }) {
   return {
     visitor: {
-      Program(_, state) {           // capture option values once per file
-        let arr;
-        prefix = state.opts.prefix ?? "_";
-        isMini = Boolean(state.opts.minify);
-        if (isMini)
-          aToZ = state.opts.aToZ;
-          if (aToZ) {
-            charOne = 192;
-            arr = [...utf8Map.slice(), ...baseMap.slice()];
-            delete arr.at(-1)[1];
+      Program(_, state) {           // runs once per file
+        byFile = Boolean(state.opts.byFile);
+        if (byFile || isMini === undefined) { // reset options for this file
+          isMini = Boolean(state.opts.minify);
+          if (isMini) {
+            blocks = blockSrc.slice();
+            aToZ   = Boolean(state.opts.aToZ);
+            if (aToZ)
+              blocks.unshift(...block8);
+            else
+              blocks.push(block16);
           }
-          else {
-            charOne = 5121;
-            arr = baseMap.slice();
-            arr.push([705])
-          }
-          charMap = new Map(arr);
+          else
+            prefix = state.opts.prefix ?? "_";
+        }                                     // else leave them as-is
       },
-      ClassDeclaration(path) {      // get the class declaration id only once
+      ClassDeclaration(path) {      // get classId only once per declaration
         classId = path.node.id;
         if (isMini) {
           charCode = byClass[path.node.superClass?.name] // share super's object
-                  ?? { code:charOne, map:{} };           // new object
+                  ?? { block:-1, map:{} };               // new object
           byClass[classId.name] = charCode;
         }
+        //console.log("class", isMini, classId.name, path.node.superClass?.name, byClass);
       },
       ClassProperty(path) {         // public fields
         newField(t, path);
@@ -71,16 +74,21 @@ export default function({ types: t }) {
 //==============================================================================
 // getId() returns a new public identifier with the old name and a new prefix
 function getId(t, obj) {
-  let str;
-  const name = obj.id.name;
-  if (!isMini)
-    str = prefix + name;         // id.name has no # prefix
-  else if (name in charCode.map)
-    str = charCode.map[name];
-  else {
-    str = nextChar();
-    charCode.map[name] = str;
+  let str,
+  name = obj.id.name;
+
+  if (isMini) {
+    name = classId.name + name;  // private names don't inherit
+    if (name in charCode.map)
+      str = charCode.map[name];
+    else {
+      str = nextChar();
+      charCode.map[name] = str;
+    }
   }
+  else
+    str = prefix + name;         // id.name has no # prefix
+
   return t.identifier(str);
 }
 // newField() removes private and public field declarations. Static fields with
@@ -89,6 +97,7 @@ function newField(t, path, isPrivate) {
   const
   node = path.node,
   key  = node.key;
+  //console.log("newField():", isPrivate ? key.id.name : key.name, charCode);
 
   if (node.value !== null) {  // reassign static = value
     if (node.static) {
@@ -99,24 +108,27 @@ function newField(t, path, isPrivate) {
       path.parentPath.parentPath.insertAfter(t.expressionStatement(aExp));
     }
     else                      // reassigning instance properties is out-of-scope
-      throw new Error(`class ${classId.name}: You must initialize ${isPrivate
-                    ? `#${key.id.name}` : key.name} in the constructor, not in the class body.`);
+      throw new Error(`class ${classId.name}: You must initialize ${isPrivate ? `#${key.id.name}` : key.name} in the constructor, not in the class body.`);
   }
-  else if (isPrivate && !(key.id.name in charCode.map))
-    charCode.map[key.id.name] = nextChar();
-
+  else if (isMini && isPrivate) {
+    const name = classId.name + key.id.name;
+     if (!(name in charCode.map))
+      charCode.map[name] = nextChar();
+  }
   path.remove();              // remove the original
 }
-// nextChar() gets the next character code for minify option
+// nextChar() gets the next character for minify option, returns char as string
 function nextChar() {
-  if (charMap.has(charCode.code)) {
-    charCode.code = charMap.get(charCode.code);
-    if (!charCode.code)
-      throw new Error(`${classId.name} and its related classes have exceeded ${
-                      aToZ ? "2468" : "2406"} private members.`);
+  if (charCode.code !== charCode.last)
+    charCode.code++;    // use the next character in the block
+  else {
+    charCode.block++;   // go to the next block
+    if (charCode.block < blocks.length) {
+      charCode.code = blocks[charCode.block][0];
+      charCode.last = blocks[charCode.block][1];
+    }
+    else                // we ran out of blocks!
+      throw new Error(`${classId.name} and its related classes have exceeded ${aToZ ? "2468" : "2406"} private members.`);
   }
-  else
-      charCode.code++;
-
   return String.fromCharCode(charCode.code);
 }
