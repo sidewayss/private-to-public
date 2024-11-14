@@ -13,7 +13,7 @@ Why? The built-in Babel plugins do too much. They don't offer an option to simpl
 ## Usage
 ### Installation
 ```
-npm install --save-dev @babel/plugin-private-to-public`
+npm install --save-dev babel-plugin-private-to-public`
 ```
 
 ### Sample babel.config.json entry:
