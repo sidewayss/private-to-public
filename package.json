@@ -1,8 +1,9 @@
 {
   "name": "babel-plugin-private-to-public",
   "version": "1.0.0",
-  "description": "A Babel plugin: transforms #property to _property or a minified name",
+  "description": "A Babel plugin that transforms #property to _property or a minified name",
   "main": "lib/index.js",
+  "files": ["lib/index.js"],
   "scripts": {
     "build": "babel index.js -o lib/index.js",
     "test": "npx jest"
@@ -16,12 +17,17 @@
     "minify",
     "minification"
   ],
-  "author": "Sideways S. <sideways@sidewayss.com>",
-  "license": "ISC",
+  "author": "Sideways S.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sidewayss/private-to-public.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sidewayss/private-to-public/issues"
+  },
+  "homepage": "https://github.com/sidewayss/private-to-public#readme",
   "devDependencies": {
-    "@babel/cli": "^7.25.9",
-    "@babel/core": "^7.26.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.25.9",
     "@babel/preset-env": "^7.26.0",
     "babel-jest": "^29.7.0",
     "babel-plugin-tester": "^11.0.4",

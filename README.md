@@ -1,13 +1,22 @@
-# `babel-plugin-private-to-public`
+# babel-plugin-private-to-public
 ## Summary
+This plugin is an alternative to the combination of:
+- [@babel/plugin-transform-class-properties](https://babeljs.io/docs/babel-plugin-transform-class-properties)
+- [@babel/plugin-transform-private-methods](https://babeljs.io/docs/babel-plugin-transform-private-methods)
+
 It has two main features and [options](#options) to control them:
-- [Backward compatibility](#backward-compatibility) for browser versions that don't support class fields and private class methods
+- [Backward Compatibility](#backward-compatibility) for browser versions that don't support class fields and private class methods
 - [Minification](#minification) of private names
 
-## Usage
-Installation... *I need to publish it!*
+Why? The built-in Babel plugins do too much. They don't offer an option to simply convert the private members to public. I didn't see any such plugin in the npm registry, so I built it. The minification features are a bonus.
 
-Here is a sample babel.config.json:
+## Usage
+### Installation
+```
+npm install --save-dev @babel/plugin-private-to-public`
+```
+
+### Sample babel.config.json entry:
 ```json
 {
   "plugins": [
@@ -15,7 +24,7 @@ Here is a sample babel.config.json:
   ]
 }
 ```
-## Backward compatibility
+## Backward Compatibility
 For browser versions that don't support [class fields](https://caniuse.com/?search=class%20fields) (a subset of which are [private properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties)) and [private methods](https://caniuse.com/mdn-javascript_classes_private_class_methods):
 - Removes all class field declarations, public and private, instance and static.
 - Renames private methods and references to private fields by replacing the `#` prefix or minifying the name.
@@ -58,9 +67,13 @@ The original goal was backward compatibility. Along the way I realized that unle
 
 It's a simple, global minification of private names to a single character using contiguous blocks of valid character codes and the `++` operator. The limit of ~2400 private names applies to the entire class family for static and instance properties combined (*they share the same namespace*\*). Each replacement property name must be unique across the entire class family or subclasses will have overlapping properties, as if overriding the superclass - which never happens with private properties.
 
+> *NOTE:* It does not generate a source map of any kind. It would be a nice enhancement.
+
 > *NOTE:* If your class family spans multiple files, you must feed the source files into Babel in descending order, superclass to subclasses. On the positive side, the plugin handles multi-file class families.
 
-The only other possible issue is that these are valid characters, and you could already be using one or more of them as single-character property names for your class; but it's not likely. The UTF-16 characters are in blocks that are unlikely to be used in source code at all, regardless of the length of the name. If you are only using ASCII characters, then there's zero chance of a name conflict, and you'll be setting `"aToZ":true`.
+The only other possible issue is that these are valid characters, and you could already be using one or more of them as single-character property names for your class; but it's not likely. The UTF-16 characters are in blocks that are unlikely to be used in source code at all, regardless of the length of the name. If you are only using ASCII characters, then there's zero chance of a name conflict.
+
+*Yes, it's kludgy, a hack, but minification is a hacky enterprise: no standards, obtuse options, and no shortage of disclaimers. If you don't need a source map, then this is a practical solution for minifiying private properties while transpiling them to public for backward compatibility.*
 
 ### Character blocks
 #### UTF-8 for `"aToZ":true`:
