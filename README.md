@@ -25,7 +25,7 @@ npm install --save-dev babel-plugin-private-to-public
 }
 ```
 ## Backward Compatibility
-For browser versions that don't support [class fields](https://caniuse.com/?search=class%20fields) (a subset of which are [private properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties)) and [private methods](https://caniuse.com/mdn-javascript_classes_private_class_methods):
+For browser versions that don't support [class fields](https://caniuse.com/?search=class%20fields) (*a subset of which are [private properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties)*) and [private methods](https://caniuse.com/mdn-javascript_classes_private_class_methods):
 - Removes all class field declarations, public and private, instance and static.
 - Renames private methods and references to private fields by replacing the `#` prefix or minifying the name.
 - For class fields with a value assigned in the declaration:
