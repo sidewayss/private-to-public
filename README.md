@@ -73,7 +73,9 @@ It's a simple, global minification of private names to a single character using 
 
 The only other possible issue is that these are valid characters, and you could already be using one or more of them as single-character property names for your class; but it's not likely. The UTF-16 characters are in blocks that are unlikely to be used in source code at all, regardless of the length of the name. If you are only using ASCII characters, then there's zero chance of a name conflict.
 
-*Yes, it's kludgy, a hack, but minification is a hacky enterprise: no standards, obtuse options, and no shortage of disclaimers. If you don't need a source map, this is a practical solution for minifiying private properties while transpiling them to public for backward compatibility.*
+Yes, it's kludgy, a hack, but minification is a hacky enterprise: no standards, obtuse options, and no shortage of disclaimers. If you don't need a source map, this is a practical solution for minifiying private properties while transpiling them to public for backward compatibility.
+
+\* *The single-character public names could be separated by static vs instance because those namespaces are separate. It would increase the number of names available, depending on how many of each you have.*
 
 ### Character blocks
 #### UTF-8 for `"aToZ":true`:
@@ -91,5 +93,3 @@ The only other possible issue is that these are valid characters, and you could 
 If I'm wrong and any of these characters are used by programmers for single character names (some of these character blocks intend their characters to be combined), please let me know.
 
 If your class family has more than 2,400 private names and you need to increase the limit, I'd be happy to oblige :) As it is, I think I could have left it at 512 using only Latin 1 Supplement and Latin Extended. Or at 620 using only the Canadian aboriginal symbols, which are pretty cool looking and the largest verifiable, single block. But in the process of finding the biggest block, I found several big ones, and it was simple enough to link them up, preempting any realistic need to extend the limit in the future.
-
-\* *The single-character public names could be separated by static vs instance because those namespaces are separate. It would increase the number of names available, depending on how many of each you have.*
